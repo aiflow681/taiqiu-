@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>Canvas Sizing Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .canvas-container {
+            border: 2px solid #007bff;
+            background: #e9ecef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            position: relative;
+        }
+        .test-canvas {
+            background: #28a745;
+            border: 1px solid #155724;
+        }
+        .info {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            margin: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h2>Canvas Sizing Test - 台球游戏比例测试</h2>
+        <p>游戏原始比例: 960x600 (1.6:1)</p>
+        
+        <div class="controls">
+            <button onclick="testPortrait()">模拟竖屏 (Portrait)</button>
+            <button onclick="testLandscape()">模拟横屏 (Landscape)</button>
+            <button onclick="resetTest()">重置测试</button>
+        </div>
+        
+        <div class="canvas-container" id="canvasContainer">
+            <canvas class="test-canvas" id="testCanvas" width="960" height="600">
+                Your browser does not support canvas
+            </canvas>
+        </div>
+        
+        <div class="info" id="canvasInfo">
+            Canvas信息将在这里显示...
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h3>当前设备信息</h3>
+        <div id="deviceInfo"></div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('testCanvas');
+        const container = document.getElementById('canvasContainer');
+        const info = document.getElementById('canvasInfo');
+        const deviceInfo = document.getElementById('deviceInfo');
+        
+        const ASPECT_RATIO = 960 / 600; // 1.6
+        
+        function updateCanvasSize(containerWidth, containerHeight, mode) {
+            let availableWidth, availableHeight;
+            
+            if (mode === 'portrait') {
+                // 竖屏模式：为UI预留空间
+                availableHeight = containerHeight * 0.50; // 50%
+                availableWidth = containerWidth * 0.88;   // 88%
+            } else {
+                // 横屏模式：为控制按钮预留空间
+                availableWidth = containerWidth * 0.70;   // 70%
+                availableHeight = containerHeight * 0.80; // 80%
+            }
+            
+            let newWidth, newHeight;
+            
+            // 按比例计算
+            if (availableWidth / availableHeight > ASPECT_RATIO) {
+                // 以高度为基准
+                newHeight = availableHeight;
+                newWidth = newHeight * ASPECT_RATIO;
+            } else {
+                // 以宽度为基准
+                newWidth = availableWidth;
+                newHeight = newWidth / ASPECT_RATIO;
+            }
+            
+            // 设置最小尺寸
+            const minWidth = 250;
+            const minHeight = 156;
+            
+            newWidth = Math.max(minWidth, newWidth);
+            newHeight = Math.max(minHeight, newHeight);
+            
+            // 重新按比例调整
+            if (newWidth / newHeight > ASPECT_RATIO) {
+                newWidth = newHeight * ASPECT_RATIO;
+            } else {
+                newHeight = newWidth / ASPECT_RATIO;
+            }
+            
+            canvas.style.width = newWidth + 'px';
+            canvas.style.height = newHeight + 'px';
+            
+            updateInfo(containerWidth, containerHeight, newWidth, newHeight, mode);
+        }
+        
+        function updateInfo(containerW, containerH, canvasW, canvasH, mode) {
+            const scaleX = canvasW / 960;
+            const scaleY = canvasH / 600;
+            const actualRatio = canvasW / canvasH;
+            
+            info.innerHTML = `
+                <strong>模式:</strong> ${mode === 'portrait' ? '竖屏' : '横屏'}<br>
+                <strong>容器尺寸:</strong> ${containerW} x ${containerH}<br>
+                <strong>Canvas显示尺寸:</strong> ${Math.round(canvasW)} x ${Math.round(canvasH)}<br>
+                <strong>缩放比例:</strong> X: ${scaleX.toFixed(3)}, Y: ${scaleY.toFixed(3)}<br>
+                <strong>实际比例:</strong> ${actualRatio.toFixed(3)} (目标: ${ASPECT_RATIO.toFixed(3)})<br>
+                <strong>比例匹配:</strong> ${Math.abs(actualRatio - ASPECT_RATIO) < 0.01 ? '✅ 正确' : '❌ 错误'}
+            `;
+        }
+        
+        function testPortrait() {
+            container.style.width = '350px';
+            container.style.height = '600px';
+            updateCanvasSize(350, 600, 'portrait');
+        }
+        
+        function testLandscape() {
+            container.style.width = '800px';
+            container.style.height = '400px';
+            updateCanvasSize(800, 400, 'landscape');
+        }
+        
+        function resetTest() {
+            container.style.width = 'auto';
+            container.style.height = '400px';
+            const rect = container.getBoundingClientRect();
+            updateCanvasSize(rect.width, rect.height, 'auto');
+        }
+        
+        function updateDeviceInfo() {
+            const isPortrait = window.innerHeight > window.innerWidth;
+            deviceInfo.innerHTML = `
+                <strong>屏幕尺寸:</strong> ${window.innerWidth} x ${window.innerHeight}<br>
+                <strong>设备像素比:</strong> ${window.devicePixelRatio || 1}<br>
+                <strong>当前方向:</strong> ${isPortrait ? '竖屏' : '横屏'}<br>
+                <strong>用户代理:</strong> ${navigator.userAgent.substring(0, 60)}...
+            `;
+        }
+        
+        // 初始化
+        window.addEventListener('load', () => {
+            resetTest();
+            updateDeviceInfo();
+        });
+        
+        window.addEventListener('resize', updateDeviceInfo);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(updateDeviceInfo, 100);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile View Test - 台球游戏</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-top: 0;
+        }
+        .device-selector {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+        .device-selector button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .device-selector button:hover {
+            background: #0056b3;
+        }
+        .device-selector button.active {
+            background: #28a745;
+        }
+        .iframe-container {
+            position: relative;
+            margin: 20px 0;
+            border: 3px solid #007bff;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+            transition: all 0.3s ease;
+        }
+        .iframe-container.portrait {
+            width: 375px;
+            height: 667px;
+            margin: 0 auto;
+        }
+        .iframe-container.landscape {
+            width: 667px;
+            height: 375px;
+            margin: 0 auto;
+        }
+        .iframe-container.desktop {
+            width: 100%;
+            height: 600px;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .info {
+            margin: 15px 0;
+            padding: 10px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 3px;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎱 台球游戏 - 移动端视图测试</h1>
+        
+        <div class="info">
+            <strong>测试说明:</strong> 点击下方按钮切换不同设备视图，检查台球桌是否完整显示（包括所有6个球袋）
+        </div>
+        
+        <div class="device-selector">
+            <strong>选择设备视图:</strong><br><br>
+            <button onclick="setView('portrait')" id="btnPortrait">📱 竖屏 (375x667)</button>
+            <button onclick="setView('landscape')" id="btnLandscape">🖥️ 横屏 (667x375)</button>
+            <button onclick="setView('desktop')" id="btnDesktop" class="active">💻 桌面 (100%)</button>
+        </div>
+        
+        <div class="status" id="status">
+            当前视图: <strong>桌面模式</strong><br>
+            尺寸: <strong id="currentSize">100% x 600px</strong>
+        </div>
+        
+        <div class="iframe-container desktop" id="iframeContainer">
+            <iframe src="index.html" id="gameFrame"></iframe>
+        </div>
+        
+        <div class="info">
+            <strong>检查清单:</strong>
+            <ul>
+                <li>✓ 能看到完整的台球桌（绿色桌面）</li>
+                <li>✓ 能看到所有6个球袋（4个角落 + 2个中间）</li>
+                <li>✓ 能看到所有台球</li>
+                <li>✓ 虚拟控制按钮显示正常</li>
+                <li>✓ 游戏状态栏显示正常</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function setView(view) {
+            const container = document.getElementById('iframeContainer');
+            const status = document.getElementById('status');
+            const currentSize = document.getElementById('currentSize');
+            
+            // 移除所有active类
+            document.querySelectorAll('.device-selector button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // 设置新视图
+            container.className = 'iframe-container ' + view;
+            
+            let viewName, size;
+            switch(view) {
+                case 'portrait':
+                    viewName = '竖屏模式 (iPhone)';
+                    size = '375px x 667px';
+                    document.getElementById('btnPortrait').classList.add('active');
+                    break;
+                case 'landscape':
+                    viewName = '横屏模式 (iPhone)';
+                    size = '667px x 375px';
+                    document.getElementById('btnLandscape').classList.add('active');
+                    break;
+                case 'desktop':
+                    viewName = '桌面模式';
+                    size = '100% x 600px';
+                    document.getElementById('btnDesktop').classList.add('active');
+                    break;
+            }
+            
+            status.innerHTML = `当前视图: <strong>${viewName}</strong><br>尺寸: <strong id="currentSize">${size}</strong>`;
+            
+            // 重新加载iframe以触发新的缩放计算
+            const iframe = document.getElementById('gameFrame');
+            iframe.src = iframe.src;
+        }
+        
+        // 初始化
+        window.addEventListener('load', () => {
+            console.log('Mobile view test page loaded');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>触摸测试</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            touch-action: manipulation;
+        }
+        
+        #testArea {
+            width: 100%;
+            height: 400px;
+            background: white;
+            border: 3px solid #333;
+            border-radius: 10px;
+            position: relative;
+            margin-bottom: 20px;
+            touch-action: none;
+        }
+        
+        .touch-point {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 0, 0, 0.5);
+            border: 2px solid red;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            transition: all 0.1s;
+        }
+        
+        #log {
+            background: #222;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 5px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .log-entry {
+            margin: 2px 0;
+        }
+        
+        h1 {
+            margin: 0 0 20px 0;
+            color: #333;
+        }
+        
+        .info {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 移动端触摸测试</h1>
+    
+    <div class="info">
+        <strong>设备信息:</strong><br>
+        <span id="deviceInfo">检测中...</span>
+    </div>
+    
+    <div id="testArea">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #999; pointer-events: none;">
+            <div style="font-size: 48px;">👆</div>
+            <div>在这里触摸/拖动</div>
+        </div>
+    </div>
+    
+    <div id="log"></div>
+    
+    <script>
+        const testArea = document.getElementById('testArea');
+        const logDiv = document.getElementById('log');
+        const deviceInfo = document.getElementById('deviceInfo');
+        
+        // 显示设备信息
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        const hasTouch = 'ontouchstart' in window;
+        deviceInfo.innerHTML = `
+            UA包含移动设备: ${isMobile ? '✅ 是' : '❌ 否'}<br>
+            支持触摸: ${hasTouch ? '✅ 是' : '❌ 否'}<br>
+            屏幕尺寸: ${window.innerWidth}x${window.innerHeight}<br>
+            方向: ${window.innerHeight > window.innerWidth ? '竖屏' : '横屏'}
+        `;
+        
+        let touchPoints = {};
+        
+        function log(message) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            // 保持最多50条日志
+            while (logDiv.children.length > 50) {
+                logDiv.removeChild(logDiv.firstChild);
+            }
+        }
+        
+        function createTouchPoint(id) {
+            const point = document.createElement('div');
+            point.className = 'touch-point';
+            point.id = `touch-${id}`;
+            testArea.appendChild(point);
+            return point;
+        }
+        
+        function updateTouchPoint(id, x, y) {
+            let point = document.getElementById(`touch-${id}`);
+            if (!point) {
+                point = createTouchPoint(id);
+            }
+            point.style.left = x + 'px';
+            point.style.top = y + 'px';
+            return point;
+        }
+        
+        function removeTouchPoint(id) {
+            const point = document.getElementById(`touch-${id}`);
+            if (point) {
+                point.remove();
+            }
+        }
+        
+        // 触摸事件
+        testArea.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            log(`✅ touchstart: ${e.touches.length} 个触摸点`);
+            
+            for (let i = 0; i < e.touches.length; i++) {
+                const touch = e.touches[i];
+                const rect = testArea.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                
+                updateTouchPoint(touch.identifier, x, y);
+                log(`   触摸点 #${touch.identifier}: (${x.toFixed(0)}, ${y.toFixed(0)})`);
+            }
+        }, { passive: false });
+        
+        testArea.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            
+            for (let i = 0; i < e.touches.length; i++) {
+                const touch = e.touches[i];
+                const rect = testArea.getBoundingClientRect();
+                const x = touch.clientX - rect.left;
+                const y = touch.clientY - rect.top;
+                
+                updateTouchPoint(touch.identifier, x, y);
+                
+                // 不记录每次移动，太多了
+                if (i === 0 && Math.random() < 0.1) {
+                    log(`👉 touchmove: (${x.toFixed(0)}, ${y.toFixed(0)})`);
+                }
+            }
+        }, { passive: false });
+        
+        testArea.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            log(`👋 touchend: ${e.changedTouches.length} 个触摸点结束`);
+            
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                const touch = e.changedTouches[i];
+                removeTouchPoint(touch.identifier);
+                log(`   结束触摸点 #${touch.identifier}`);
+            }
+        }, { passive: false });
+        
+        // 鼠标事件（桌面测试）
+        testArea.addEventListener('mousedown', function(e) {
+            const rect = testArea.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            log(`🖱️ mousedown: (${x.toFixed(0)}, ${y.toFixed(0)})`);
+            updateTouchPoint('mouse', x, y);
+        });
+        
+        testArea.addEventListener('mousemove', function(e) {
+            const rect = testArea.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            updateTouchPoint('mouse', x, y);
+        });
+        
+        testArea.addEventListener('mouseup', function(e) {
+            log(`🖱️ mouseup`);
+            removeTouchPoint('mouse');
+        });
+        
+        log('✅ 触摸测试页面已加载');
+        log(`设备: ${isMobile ? '移动设备' : '桌面设备'}`);
+        log(`触摸支持: ${hasTouch ? '是' : '否'}`);
+    </script>
+</body>
+</html>

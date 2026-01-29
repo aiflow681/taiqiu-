@@ -1,69 +1,88 @@
+// 向量类
 function Vector(a, b) {
     this.x = a || 0;
     this.y = b || 0
 }
+// 重置向量
 Vector.prototype.reset = function(a, b) {
     this.x = a;
     this.y = b
 };
+// 获取向量副本
 Vector.prototype.getClone = function() {
     return new Vector(this.x, this.y)
 };
+// 裁剪向量长度
 Vector.prototype.cut = function(a) {
     this.setLength(Math.min(a, this.getLength()))
 };
+// 裁剪向量长度并返回新向量
 Vector.prototype.cutNew = function(a) {
     var a = Math.min(a, this.getLength()),
         b = this.getClone();
     b.setLength(a);
     return b
 };
+// 判断向量是否相等
 Vector.prototype.equals = function(a) {
     return this.x == a.x && this.y == a.y
 };
+// 向量加法
 Vector.prototype.plus = function(a) {
     this.x += a.x;
     this.y += a.y
 };
+// 向量加法并返回新向量
 Vector.prototype.plusNew = function(a) {
     return new Vector(this.x + a.x, this.y + a.y)
 };
+// 向量减法
 Vector.prototype.minus = function(a) {
     this.x -= a.x;
     this.y -= a.y
 };
+// 向量减法并返回新向量
 Vector.prototype.minusNew = function(a) {
     return new Vector(this.x - a.x, this.y - a.y)
 };
+// 向量取反
 Vector.prototype.negate = function() {
     this.x = -this.x;
     this.y = -this.y
 };
+// 向量取反并返回新向量
 Vector.prototype.negateNew = function() {
     return new Vector(-this.x, -this.y)
 };
+// 向量缩放
 Vector.prototype.scale = function(a) {
     this.x *= a;
     this.y *= a
 };
+// 向量缩放并返回新向量
 Vector.prototype.scaleNew = function(a) {
     return new Vector(this.x * a, this.y * a)
 };
+// 获取向量长度
 Vector.prototype.getLength = function() {
     return Math.sqrt(this.x * this.x + this.y * this.y)
 };
+// 设置向量长度
 Vector.prototype.setLength = function(a) {
     var b = this.getLength();
     b ? this.scale(a / b) : this.x = a
 };
+// 获取向量角度
 Vector.prototype.getAngle = function() {
     return Math.atan2(this.y, this.x)
 };
+// 设置向量角度
 Vector.prototype.setAngle = function(a) {
     var b = this.getLength();
     this.x = b * Math.cos(a);
     this.y = b * Math.sin(a)
 };
+// 旋转向量
 Vector.prototype.rotate = function() {
     var a, b;
     b = arguments;
@@ -72,25 +91,31 @@ Vector.prototype.rotate = function() {
     this.x = this.x * a - this.y * b;
     this.y = d
 };
+// 旋转向量并返回新向量
 Vector.prototype.rotateNew = function(a) {
     var b = new Vector(this.x, this.y);
     b.rotate(a);
     return b
 };
+// 向量点积
 Vector.prototype.dot = function(a) {
     return this.x * a.x + this.y * a.y
 };
+// 获取法向量
 Vector.prototype.getNormal = function() {
     return new Vector(-this.y, this.x)
 };
+// 判断是否垂直
 Vector.prototype.isPerpTo = function(a) {
     return this.dot(a) == 0
 };
+// 计算两向量夹角
 Vector.prototype.angleBetween = function(a) {
     a = this.dot(a) / (this.getLength() * a.getLength());
     return Math.acos(a)
 };
 (function() {
+    // 初始化图片资源
     function a() {
         for (var a in q) f[a] = new Quark.Bitmap({
             image: q[a],
@@ -100,6 +125,7 @@ Vector.prototype.angleBetween = function(a) {
         })
     }
 
+    // 初始化游戏
     function b() {
         a();
         d();
@@ -120,6 +146,7 @@ Vector.prototype.angleBetween = function(a) {
         }
     }
 
+    // 初始化舞台和画布
     function d() {
         var a = Quark.getDOM("container"),
             e = new Quark.DOMContext({
@@ -172,6 +199,7 @@ Vector.prototype.angleBetween = function(a) {
         c.initPlayers()
     }
 
+    // 创建台球
     function g() {
         c.Ball.createBalls();
         var a = c.point = new Quark.Bitmap({
@@ -198,7 +226,7 @@ Vector.prototype.angleBetween = function(a) {
                 c.point.drawable.domDrawable.style.borderRadius = c.r + "px";
             }
         } catch(err) {
-            console.log('Canvas mode: skipping DOM styles');
+            // Canvas模式：跳过DOM样式设置
         }
         l.addChild(f.ballRoad);
         l.addChild(f.cue);
@@ -207,6 +235,7 @@ Vector.prototype.angleBetween = function(a) {
         c.xx = f.ballRoad.x + f.ballRoad.width - j - 6
     }
 
+    // 初始化FPS显示
     function e() {
         c.frames = 0;
         fpsContainer = Quark.getDOM("fps");
@@ -235,8 +264,6 @@ Vector.prototype.angleBetween = function(a) {
         isPortrait: screenHeight > screenWidth
     };
     
-    console.log('Game initializing: ' + h + 'x' + i + (isMobile ? ' (Mobile)' : ' (Desktop)'));
-    
     var c = Q.use("BallGame"),
         j = c.r = 14,
         k = 60,
@@ -252,7 +279,6 @@ Vector.prototype.angleBetween = function(a) {
     c.canShot = !0;
     var o;
     window.onload = function(a) {
-        console.log('🎱 Taiqiu.js loaded - VERSION 2.0 WITH TOUCH FIX');
         var c = new Quark.ImageLoader;
         c.addEventListener("complete", function(a) {
             a.target.removeAllEventListeners();
@@ -314,7 +340,7 @@ Vector.prototype.angleBetween = function(a) {
         for (var a = 0; a < BallGame.Ball.balls.length; a++) {
             var c =
                 BallGame.Ball.balls[a];
-            console.log(c.x - p.x, c.y - p.y, c.num)
+            // 调试输出已禁用
         }
     }
     // 添加窗口大小变化时的自适应处理
@@ -439,7 +465,7 @@ Vector.prototype.angleBetween = function(a) {
                 } else c[d] ==
                     0 && (f = !0);
             for (d = 0; d < b; d++) !e.player.type && c[d] != 0 ? (e.initPlayerType(c[d]), f || (e.player.addScore(10), a = !0), e.player.num++) : e.player.type == c[d] ? (f || (e.player.addScore(10), a = !0), e.player.num++) : e.player.next.type == c[d] && e.player.next.num++;
-            console.log(e.player1.num + " " + e.player2.num);
+            // 调试输出已禁用
             f ? (e.changePlayer(), e.whiteBall.isDown = Q.supportTouch ? !1 : !0, e.whiteBall.visible = !0, e.whiteBall.update = e.Ball.prototype.checkBounds) : a ? e.setGood() : e.setBad()
         }
     }
@@ -507,21 +533,21 @@ Vector.prototype.angleBetween = function(a) {
                 });
             
             
-            // Fixed: Force circular rendering for balls to prevent square appearance
-            // Use local referencing to ensure context and closure safety
+            // 修复：强制球体圆形渲染以防止显示为方形
+            // 使用本地引用确保上下文和闭包安全
             this.bitmap.render = function(context) {
                 var ctx = context.context;
-                // Default radius to 16 if regX is missing, though regX=c should be set
+                // 如果regX缺失则默认半径为16，虽然regX=c应该已设置
                 var r = this.regX || 16;
-                // Original render logic (drawImage) - grabbed from prototype to avoid recursion if we used 'this.render'
+                // 原始渲染逻辑（drawImage）- 从原型获取以避免使用'this.render'时的递归
                 var performDraw = Quark.Bitmap.prototype.render;
                 
                 if (ctx) {
                     ctx.save();
                     ctx.beginPath();
-                    // Clip a circle at the registration point (center)
-                    // Since Quark transforms origin to top-left of the bounding box due to regX translation,
-                    // the center of the ball is at (r, r)
+                    // 在注册点（中心）裁剪一个圆形
+                    // 由于Quark将原点转换到边界框左上角（因为regX平移），
+                    // 球的中心位于(r, r)
                     ctx.arc(r, r, r, 0, Math.PI * 2);
                     ctx.closePath();
                     ctx.clip();
@@ -587,7 +613,7 @@ Vector.prototype.angleBetween = function(a) {
                 m();
                 this.isDie = !0;
                 this.update = this.inHole;
-                // Fix: Check if type array exists before pushing to prevent crash
+                // 修复：检查type数组是否存在再push，防止崩溃
                 if (e.Ball.type) {
                     e.Ball.type.push(this.type);
                 } else {
@@ -629,7 +655,7 @@ Vector.prototype.angleBetween = function(a) {
             this.isDie = !0; 
             this.update = this.inHole; 
             if (e.Ball.type) e.Ball.type.push(this.type);
-            // console.log(this.num + "aaaaaaaaaaaaaaaaaaaaaaaaa lose");
+            // console.log(this.num + "aaaaaaaaaaaaaaaaaaaaaaaaa 失败");
         }
     };
     h.prototype.touchMove = function() {
@@ -669,7 +695,7 @@ Vector.prototype.angleBetween = function(a) {
             g = e.r;
         this.v.getLength() > g && (g = this.v.getLength());
         
-        // Fix: Use clones for wall points to prevent floating point drift corruption of table geometry
+        // 修复：使用墙壁点的克隆以防止浮点漂移破坏台球桌几何结构
         var p1 = a.p1.getClone();
         var p2 = a.p2.getClone();
         p1.rotate(d, -c);
@@ -682,7 +708,7 @@ Vector.prototype.angleBetween = function(a) {
             i = p1.x,
             j = p2.x;
         
-        // Fix: Use tmp variable for swapping to avoid shadowing or scope confusion with k
+        // 修复：使用tmp变量进行交换，避免与k产生阴影或作用域混淆
         if (i > j) {
             var tmp = i;
             i = j;
@@ -693,7 +719,7 @@ Vector.prototype.angleBetween = function(a) {
             r = this.loc.x;
         if (r > i && r < j && k + g > h && k - g < h) this.loc.y = this.v.y > 0 ? h - g : h + g, this.v.y *= -1, b = !0;
         
-        // Only rotate ball back, wall clones are discarded
+        // 只旋转球回去，墙壁克隆被丢弃
         this.loc.rotate(d, c);
         this.v.rotate(d, c);
         return b
@@ -781,8 +807,6 @@ Vector.prototype.angleBetween = function(a) {
         var isMobileOrSimulator = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                                   (window.innerWidth < 768 && 'ontouchstart' in window);
         
-        console.log('🎮 Input mode: ' + (isMobileOrSimulator ? 'MOBILE/TOUCH' : 'DESKTOP/MOUSE'));
-        
         // 只在桌面模式下启用鼠标事件
         if (!isMobileOrSimulator) {
             window.onmousemove = function(a) {
@@ -799,22 +823,17 @@ Vector.prototype.angleBetween = function(a) {
                     b.canShot) a(d.x, d.y), b.canShot = !1;
                 b.isDown = !1
             };
-            console.log('✅ Mouse events enabled (desktop mode)');
         } else {
-            console.log('✅ Mouse events DISABLED (mobile mode - touch only)');
+            // 移动模式 - 仅触摸
         }
         
         // 触摸事件始终启用
         g.container.ontouchstart = function(a) {
             a.preventDefault();
             b.isDown = !0;
-            console.log('✅ TOUCH START - isDown set to true');
         };
         g.container.ontouchmove = function(a) {
-            console.log('✅ TOUCH MOVE FIRED!');
             a.preventDefault();
-            
-            console.log('✅ TOUCH MOVE DETECTED!');
             
             // 移动端坐标转换
             var canvas = document.querySelector('#container canvas');
@@ -824,23 +843,18 @@ Vector.prototype.angleBetween = function(a) {
                 var scaleY = rect.height / 600;
                 var scale = Math.min(scaleX, scaleY);
                 
-                console.log('📱 Touch event: scale=' + scale.toFixed(3) + ', clientX=' + a.touches[0].clientX + ', clientY=' + a.touches[0].clientY);
-                
                 // 如果有缩放，转换坐标
                 if (scale < 0.95) {
                     d.x = (a.touches[0].clientX - rect.left) / scale;
                     d.y = (a.touches[0].clientY - rect.top) / scale;
-                    console.log('🎯 Converted to game coords: x=' + d.x.toFixed(0) + ', y=' + d.y.toFixed(0));
                 } else {
                     d.x = a.touches[0].clientX;
                     d.y = a.touches[0].clientY;
-                    console.log('✋ No conversion needed (desktop mode)');
                 }
             } else {
-                // Fallback: no conversion
+                // 备用方案：不进行转换
                 d.x = a.touches[0].clientX;
                 d.y = a.touches[0].clientY;
-                console.log('⚠️ Canvas not found, using raw coordinates');
             }
         };
         g.container.ontouchend = function(e) {

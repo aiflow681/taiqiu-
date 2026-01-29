@@ -483,7 +483,7 @@
 	<script>
 		window.FullscreenUtils = {
 			initFullscreen: function(containerId, gameTitle) {
-				console.log('全屏功能初始化 - ' + gameTitle);
+				// 全屏功能初始化
 			}
 		};
 		
@@ -591,7 +591,6 @@
 			// 击球按钮
 			function handleShoot(e) {
 				e.preventDefault();
-				console.log('🎱 Shoot button clicked');
 				if (window.BallGame && BallGame.canShot && !BallGame.paused) {
 					// 使用智能击球功能
 					if (BallGame.smartShoot) {
@@ -614,7 +613,6 @@
 			// 重新开始按钮
 			function handleReset(e) {
 				e.preventDefault();
-				console.log('🔄 Reset button clicked');
 				if (window.BallGame) {
 					location.reload();
 				}
@@ -631,7 +629,6 @@
 				const checkBallGame = setInterval(() => {
 					if (window.BallGame && BallGame.stage) {
 						clearInterval(checkBallGame);
-						console.log('✅ BallGame对象已初始化');
 						
 						// 初始化虚拟控制器
 						initVirtualControls();
@@ -643,8 +640,6 @@
 							document.body.style.touchAction = 'manipulation';
 							document.body.style.overflow = 'hidden';
 							document.documentElement.style.overflow = 'hidden';
-							
-							console.log('✅ 移动端UI已启用');
 							
 							// 启动游戏状态更新
 							startGameStatusUpdates();
@@ -677,7 +672,7 @@
 					clearInterval(checkBallGame);
 				}, 5000);
 			} catch (error) {
-				console.error('游戏UI初始化失败:', error);
+				// 游戏UI初始化失败
 			}
 		}
 		
@@ -707,7 +702,6 @@
 					parent.insertBefore(wrapper, canvas);
 					wrapper.appendChild(canvas);
 					
-					console.log('✅ Canvas wrapper created');
 				}
 				
 				const container = document.getElementById('container');
@@ -774,8 +768,6 @@
 			setTimeout(() => {
 				window.dispatchEvent(new Event('resize'));
 			}, 100);
-			
-			console.log(`界面已调整为${isPortrait ? '竖屏' : '横屏'}模式`);
 		}
 		
 		// 游戏状态更新
@@ -809,7 +801,6 @@
 		
 		// 页面加载完成后开始UI初始化
 		document.addEventListener('DOMContentLoaded', function() {
-			console.log('✅ DOM内容加载完成');
 			initGameUI();
 		});
 	</script>

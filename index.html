@@ -585,24 +585,101 @@
 		
 		// 初始化虚拟控制器
 		function initVirtualControls() {
+			const powerBtn = document.getElementById('powerBtn');
 			const shootBtn = document.getElementById('shootBtn');
 			const resetBtn = document.getElementById('resetBtn');
+			const powerIndicator = document.getElementById('powerIndicator');
+			
+			// 力度按钮 - 调整击球力度
+			let powerLevel = 15; // 默认力度
+			const minPower = 5;
+			const maxPower = 30;
+			
+			function handlePower(e) {
+				e.preventDefault();
+				e.stopPropagation();
+				
+				if (window.BallGame) {
+					// 循环切换力度：低 -> 中 -> 高 -> 低
+					if (powerLevel <= 10) {
+						powerLevel = 20; // 中等力度
+					} else if (powerLevel <= 20) {
+						powerLevel = 30; // 高力度
+					} else {
+						powerLevel = 10; // 低力度
+					}
+					
+					// 更新BallGame的力度
+					BallGame.power = powerLevel;
+					
+					// 显示力度指示器
+					if (powerIndicator) {
+						powerIndicator.textContent = Math.round(powerLevel);
+						powerIndicator.classList.add('visible');
+						
+						// 根据力度改变颜色
+						if (powerLevel <= 10) {
+							powerIndicator.style.background = 'rgba(76, 175, 80, 0.9)'; // 绿色 - 低
+						} else if (powerLevel <= 20) {
+							powerIndicator.style.background = 'rgba(255, 152, 0, 0.9)'; // 橙色 - 中
+						} else {
+							powerIndicator.style.background = 'rgba(244, 67, 54, 0.9)'; // 红色 - 高
+						}
+						
+						// 3秒后隐藏指示器
+						setTimeout(() => {
+							powerIndicator.classList.remove('visible');
+						}, 3000);
+					}
+					
+					// 按钮反馈动画
+					powerBtn.classList.add('active');
+					setTimeout(() => {
+						powerBtn.classList.remove('active');
+					}, 200);
+				}
+			}
+			
+			powerBtn.addEventListener('touchstart', handlePower);
+			powerBtn.addEventListener('click', handlePower);
 			
 			// 击球按钮
 			function handleShoot(e) {
 				e.preventDefault();
+				e.stopPropagation();
+				
 				if (window.BallGame && BallGame.canShot && !BallGame.paused) {
-					// 使用智能击球功能
-					if (BallGame.smartShoot) {
-						BallGame.smartShoot();
-					} else if (BallGame.whiteBall && BallGame.line) {
-						// 备用方法
+					if (BallGame.whiteBall && BallGame.line) {
 						const angle = BallGame.line.rotation * Math.PI / 180;
-						const power = BallGame.power || 15;
+						const power = BallGame.power || powerLevel;
 						const vx = -power * Math.cos(angle);
 						const vy = -power * Math.sin(angle);
+						
+						// 设置白球速度
 						BallGame.whiteBall.v.reset(vx, vy);
+						
+						// 初始化进球类型数组
+						if (BallGame.Ball) {
+							BallGame.Ball.type = [];
+							BallGame.loop = BallGame.Ball.update;
+						}
+						
+						// 更新游戏状态
 						BallGame.canShot = false;
+						BallGame.power = 15; // 重置为默认力度
+						powerLevel = 15;
+						BallGame.powerV = 0.4;
+						
+						// 隐藏瞄准元素
+						if (BallGame.cue) BallGame.cue.visible = false;
+						if (BallGame.line) BallGame.line.visible = false;
+						if (BallGame.point) BallGame.point.visible = false;
+						
+						// 按钮反馈
+						shootBtn.classList.add('active');
+						setTimeout(() => {
+							shootBtn.classList.remove('active');
+						}, 200);
 					}
 				}
 			}
@@ -613,8 +690,14 @@
 			// 重新开始按钮
 			function handleReset(e) {
 				e.preventDefault();
+				e.stopPropagation();
+				
 				if (window.BallGame) {
-					location.reload();
+					// 按钮反馈
+					resetBtn.classList.add('active');
+					setTimeout(() => {
+						location.reload();
+					}, 200);
 				}
 			}
 			
@@ -736,8 +819,6 @@
 				canvas.style.display = 'block';
 				canvas.style.left = '0';
 				canvas.style.top = '0';
-				
-				// console.log(`✅ Wrapper缩放: ${finalScale.toFixed(3)} (${isPortrait ? '竖屏' : '横屏'})`);
 				
 				return true;
 			};

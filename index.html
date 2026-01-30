@@ -652,8 +652,8 @@
 					if (BallGame.whiteBall && BallGame.line) {
 						const angle = BallGame.line.rotation * Math.PI / 180;
 						const power = BallGame.power || powerLevel;
-						const vx = -power * Math.cos(angle);
-						const vy = -power * Math.sin(angle);
+						const vx = power * Math.cos(angle);
+						const vy = power * Math.sin(angle);
 						
 						// 设置白球速度
 						BallGame.whiteBall.v.reset(vx, vy);

@@ -94,10 +94,10 @@
                     const angle = BallGame.line.rotation * Math.PI / 180;
                     const power = BallGame.power || 15;
                     
-                    // 直接设置白球的速度
+                    // 设置白球的速度 - 球杆指向的方向
                     if (whiteBall.v) {
-                        const vx = -power * Math.cos(angle);
-                        const vy = -power * Math.sin(angle);
+                        const vx = power * Math.cos(angle);
+                        const vy = power * Math.sin(angle);
                         whiteBall.v.reset(vx, vy);
                         
                         // 初始化进球类型数组

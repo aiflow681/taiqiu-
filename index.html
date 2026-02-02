@@ -1,889 +1,211 @@
-<!DOCTYPE HTML>
-<html>
+<!DOCTYPE html>
+<html lang="zh-CN">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-	<meta name="apple-mobile-web-app-capable" content="yes" />
-	<meta name="apple-touch-fullscreen" content="yes" />
-	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-	<meta name="format-detection" content="telephone=no">
-	<meta name="msapplication-tap-highlight" content="no">
-	<title> 台球游戏 | 移动端优化版 </title>
-	<meta name="description" content="台球游戏 - 移动端优化版">
-	<meta name="keywords" content="台球,8球,体育游戏,手机游戏">
-	<style type="text/css">
-		body{margin:0;padding:0;font-size:12px;background:url(res/wood.jpg); touch-action: manipulation; overflow: hidden;}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>台球游戏 | 纯H5版</title>
+    <style>
+        /* 全局样式重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
 
-/* 基础容器样式 */
-#container {
-    width: 100vw;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    margin: 0;
-    padding: 0;
-}
+        /* 页面主体样式 */
+        body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            /* 木质纹理背景 */
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23654321" width="100" height="100"/><rect fill="%23543210" width="50" height="50"/><rect fill="%23543210" width="50" height="50" x="50" y="50"/></svg>');
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-/* Canvas包装器 - 用于缩放 */
-#canvasWrapper {
-    position: relative;
-    transform-origin: center center;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
+        /* 游戏容器 */
+        #gameContainer {
+            position: relative;
+            width: 960px;
+            height: 600px;
+            max-width: 95vw;
+            max-height: 95vh;
+            background: #2d5016;
+            border: 20px solid #8b4513;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
 
-/* 游戏画布 - 保持原始尺寸，通过包装器缩放 */
-#container canvas {
-    display: block !important;
-    touch-action: manipulation;
-    position: static !important;
-    left: 0 !important;
-    top: 0 !important;
-    margin: 0 !important;
-}
+        /* 竖屏模式下的游戏容器 */
+        @media (orientation: portrait) {
+            #gameContainer {
+                width: 95vw;
+                height: calc(95vw * 1.6);
+                max-height: 85vh;
+            }
+        }
 
-/* 横屏模式样式 */
-@media (orientation: landscape) {
-    #container {
-        width: 100vw;
-        height: 100vh;
-    }
-    
-    #canvasWrapper {
-        /* 横屏时为控制按钮预留空间 */
-        max-width: 85vw;
-        max-height: 90vh;
-    }
-    
-    .virtual-controls {
-        display: flex !important;
-        flex-direction: column;
-        right: 1vw;
-        left: auto;
-        bottom: 2vh;
-        top: auto;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 1.5vh;
-        background: rgba(0, 0, 0, 0.3);
-        transform-origin: bottom right;
-        padding: 1.5vh 1vw;
-        border-radius: 20px;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .virtual-controls .control-button {
-        width: min(9vw, 7vh, 65px);
-        height: min(9vw, 7vh, 65px);
-        font-size: min(4.5vw, 3.5vh, 22px);
-        margin: 0.5vh 0;
-        background: rgba(255, 255, 255, 0.4);
-        border: 3px solid rgba(255, 255, 255, 0.8);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-    }
-    
-    .virtual-controls .control-button.special {
-        width: min(11vw, 9vh, 75px);
-        height: min(11vw, 9vh, 75px);
-        font-size: min(5.5vw, 4.5vh, 26px);
-        background: rgba(255, 215, 0, 0.4);
-        border-color: rgba(255, 215, 0, 0.9);
-    }
-    
-    .game-status {
-        top: 2vh;
-        left: 2vw;
-        right: auto;
-        bottom: auto;
-        max-width: 35vw;
-    }
-}
+        /* 游戏画布 */
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: #2d5016;
+        }
 
-/* 竖屏模式样式 */
-@media (orientation: portrait) {
-    #container {
-        width: 100vw;
-        height: 100vh;
-    }
-    
-    #canvasWrapper {
-        /* 竖屏时为UI预留更多空间 */
-        max-width: 95vw;
-        max-height: 55vh;
-    }
-    
-    .virtual-controls {
-        display: flex !important;
-        flex-direction: row;
-        left: 50%;
-        right: auto;
-        bottom: 1vh;
-        top: auto;
-        transform: translateX(-50%);
-        align-items: center;
-        justify-content: center;
-        gap: 3vw;
-        background: rgba(0, 0, 0, 0.3);
-        transform-origin: bottom center;
-        padding: 1.5vh 4vw;
-        border-radius: 25px;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        max-width: 90vw;
-    }
-    
-    .virtual-controls .control-button {
-        width: min(14vw, 14vh, 70px);
-        height: min(14vw, 14vh, 70px);
-        font-size: min(6vw, 6vh, 24px);
-        margin: 0 1vw;
-        background: rgba(255, 255, 255, 0.4);
-        border: 3px solid rgba(255, 255, 255, 0.8);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-    }
-    
-    .virtual-controls .control-button.special {
-        width: min(17vw, 17vh, 85px);
-        height: min(17vw, 17vh, 85px);
-        font-size: min(7vw, 7vh, 28px);
-        background: rgba(255, 215, 0, 0.4);
-        border-color: rgba(255, 215, 0, 0.9);
-    }
-    
-    .game-status {
-        top: 1vh;
-        left: 2vw;
-        right: 2vw;
-        bottom: auto;
-        max-width: none;
-        text-align: center;
-        font-size: min(3.5vw, 2.5vh, 16px);
-        padding: 1vh 2vw;
-    }
-    
-    .game-status div {
-        display: inline-block;
-        margin: 0 1.5vw;
-        white-space: nowrap;
-    }
-    
-    /* 隐藏竖屏警告 */
-    .portrait-warning {
-        display: none !important;
-    }
-}
+        /* 移动端虚拟控制器 */
+        .mobile-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
 
-/* 竖屏模式提示 */
-.portrait-warning {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.95);
-    color: white;
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    z-index: 9999;
-    padding: 20px;
-    animation: fadeIn 0.3s ease;
-}
+        /* 竖屏模式下显示控制器 */
+        @media (orientation: portrait) {
+            .mobile-controls {
+                display: flex;
+                bottom: 15px;
+            }
+        }
 
-.portrait-warning.visible {
-    display: flex;
-}
+        /* 控制按钮样式 */
+        .control-btn {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 3px solid #333;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
 
-.portrait-warning-icon {
-    font-size: 64px;
-    margin-bottom: 30px;
-    animation: rotate 2s ease-in-out infinite;
-}
+        /* 按钮按下效果 */
+        .control-btn:active {
+            transform: scale(0.9);
+            background: rgba(255, 215, 0, 0.9);
+        }
 
-.portrait-warning-text {
-    font-size: 20px;
-    line-height: 1.6;
-    max-width: 300px;
-    margin-bottom: 30px;
-}
+        /* 力度指示器 */
+        .power-indicator {
+            position: absolute;
+            top: -25px;
+            right: -10px;
+            background: rgba(255, 69, 0, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            display: none;
+        }
 
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
+        /* 显示力度指示器 */
+        .power-indicator.visible {
+            display: block;
+        }
 
-@keyframes rotate {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(90deg); }
-}
-		
-		/* 移动端虚拟控制器 */
-	.virtual-controls {
-		display: none;
-		position: fixed;
-		right: 2vw;
-		bottom: 2vh;
-		flex-direction: column;
-		gap: 1.5vh;
-		z-index: 1001;
-		padding: 1.5vh 1.5vw;
-		background: rgba(0, 0, 0, 0.1);
-		border-radius: 15px;
-		backdrop-filter: blur(10px);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		/* 自动缩放控制 */
-		transform: scale(1);
-		transform-origin: bottom right;
-	}
+        /* HUD显示（分数等信息） */
+        .hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            color: white;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+            z-index: 50;
+        }
 
-	.virtual-controls .control-button {
-		/* 使用视口单位实现自动缩放 */
-		width: min(8vw, 8vh, 60px);
-		height: min(8vw, 8vh, 60px);
-		background: rgba(255, 255, 255, 0.3);
-		border: 2px solid rgba(255, 255, 255, 0.6);
-		border-radius: 50%;
-		color: white;
-		font-size: min(4vw, 4vh, 20px);
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		backdrop-filter: blur(10px);
-		transition: all 0.2s ease;
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-		position: relative;
-		overflow: hidden;
-		touch-action: manipulation;
-		-webkit-tap-highlight-color: transparent;
-	}
+        /* 竖屏模式下的HUD */
+        @media (orientation: portrait) {
+            .hud {
+                font-size: 16px;
+                top: 8px;
+                left: 8px;
+                right: 8px;
+            }
+        }
 
-		.virtual-controls .control-button::before {
-			content: '';
-			position: absolute;
-			top: 50%;
-			left: 50%;
-			width: 0;
-			height: 0;
-			background: rgba(255, 255, 255, 0.3);
-			border-radius: 50%;
-			transform: translate(-50%, -50%);
-			transition: all 0.3s ease;
-		}
+        /* 移动端和小屏幕适配 */
+        @media (max-width: 768px), (max-height: 600px) {
+            .mobile-controls {
+                display: flex;
+            }
+        }
 
-		.virtual-controls .control-button:active::before {
-			width: 100%;
-			height: 100%;
-		}
+        /* 横屏模式适配 */
+        @media (orientation: landscape) and (max-height: 600px) {
+            .mobile-controls {
+                bottom: 10px;
+            }
+            .control-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+        }
 
-		.virtual-controls .control-button.active {
-			background: rgba(255, 255, 255, 0.4);
-			transform: scale(0.95);
-		}
-
-		.virtual-controls .control-button.special {
-			width: min(10vw, 10vh, 80px);
-			height: min(10vw, 10vh, 80px);
-			background: rgba(255, 215, 0, 0.3);
-			border-color: rgba(255, 215, 0, 0.7);
-			font-size: min(5vw, 5vh, 24px);
-		}
-
-		/* 力度显示 */
-		.power-indicator {
-			position: absolute;
-			top: -8px;
-			right: -8px;
-			width: min(5vw, 5vh, 20px);
-			height: min(5vw, 5vh, 20px);
-			background: rgba(255, 69, 0, 0.8);
-			border-radius: 50%;
-			display: none;
-			align-items: center;
-			justify-content: center;
-			font-size: min(2.5vw, 2.5vh, 10px);
-			color: white;
-			font-weight: bold;
-		}
-
-		.power-indicator.visible {
-			display: flex;
-			animation: pulse 0.5s ease-in-out infinite alternate;
-		}
-
-		@keyframes pulse {
-			from { transform: scale(1); }
-			to { transform: scale(1.2); }
-		}
-
-		/* 游戏状态显示 - 自动缩放适配 */
-		.game-status {
-			position: fixed;
-			top: 2vh;
-			left: 2vw;
-			z-index: 1000;
-			color: white;
-			font-size: min(3.5vw, 2vh, 16px);
-			font-weight: bold;
-			text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-			background: rgba(0, 0, 0, 0.6);
-			padding: 2vh 2vw;
-			border-radius: 15px;
-			backdrop-filter: blur(10px);
-			line-height: 1.5;
-			display: none;
-			min-width: min(35vw, 140px);
-			border: 2px solid rgba(255, 255, 255, 0.2);
-			box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
-			transform: scale(1);
-			transform-origin: top left;
-		}
-
-		.game-status div {
-			margin: 0.5vh 0;
-			white-space: nowrap;
-		}
-
-		.game-status span {
-			color: #4CAF50;
-			font-weight: bold;
-		}
-
-		/* 移动端特殊适配 */
-		@media screen and (max-width: 768px) {
-			.virtual-controls {
-				display: flex;
-			}
-			
-			.game-status {
-				display: block;
-			}
-			
-			.orientation-indicator {
-				display: block;
-			}
-			
-			/* 防止页面滚动 */
-			html, body {
-				overflow: hidden;
-				position: fixed;
-				width: 100%;
-				height: 100%;
-			}
-		}
-
-		/* 方向指示器 */
-		.orientation-indicator {
-			position: fixed;
-			top: 2vh;
-			right: 2vw;
-			z-index: 1000;
-			background: rgba(0, 0, 0, 0.6);
-			color: white;
-			padding: 1vh 2vw;
-			border-radius: 10px;
-			font-size: min(3vw, 2vh, 14px);
-			display: none;
-			align-items: center;
-			gap: 1vw;
-			backdrop-filter: blur(10px);
-			border: 1px solid rgba(255, 255, 255, 0.2);
-			transition: all 0.3s ease;
-		}
-
-		.orientation-indicator span {
-			white-space: nowrap;
-		}
-
-		/* 横屏模式下的方向指示器 */
-		@media (orientation: landscape) {
-			.orientation-indicator {
-				top: 2vh;
-				right: 15vw; /* 避开控制按钮 */
-			}
-		}
-
-		/* 竖屏模式下的方向指示器 */
-		@media (orientation: portrait) {
-			.orientation-indicator {
-				top: 8vh; /* 避开游戏状态栏 */
-				right: 2vw;
-			}
-		}
-
-		/* 小屏幕设备优化 */
-		@media screen and (max-width: 480px) {
-			.virtual-controls .control-button {
-				width: min(12vw, 50px);
-				height: min(12vw, 50px);
-				font-size: min(6vw, 18px);
-			}
-			
-			.virtual-controls .control-button.special {
-				width: min(15vw, 65px);
-				height: min(15vw, 65px);
-				font-size: min(7vw, 22px);
-			}
-		}
-	</style>
+        /* 竖屏小屏幕优化 */
+        @media (orientation: portrait) and (max-width: 480px) {
+            .control-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+            .hud {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
-	<div id = "container"></div>
-<div id = "fps" style = "position:absolute"></div>
-
-<!-- 可选的横屏提示 (现在支持两种方向，可以隐藏此提示) -->
-<div class="portrait-warning" id="portraitWarning" style="display: none;">
-    <div class="portrait-warning-icon">📱</div>
-    <div class="portrait-warning-text">
-        游戏现在支持横屏和竖屏模式<br>
-        横屏模式可获得更佳体验
-        <br><br>
-        <button onclick="orientationManager.hideWarning()" style="background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
-            继续游戏
-        </button>
+    <!-- 游戏主容器 -->
+    <div id="gameContainer">
+        <!-- 顶部信息显示 -->
+        <div class="hud">
+            <div>玩家1: <span id="player1Score">0</span></div>
+            <div>球数: <span id="ballCount">15</span></div>
+            <div>玩家2: <span id="player2Score">0</span></div>
+        </div>
+        
+        <!-- 游戏画布 -->
+        <canvas id="gameCanvas" width="960" height="600"></canvas>
+        
+        <!-- 移动端虚拟控制器 -->
+        <div class="mobile-controls">
+            <!-- 力度调节按钮 -->
+            <div style="display: flex; gap: 10px;">
+                <div class="control-btn" id="powerBtn">
+                    ⚡
+                    <div class="power-indicator" id="powerIndicator">15</div>
+                </div>
+            </div>
+            <!-- 击球按钮 -->
+            <div class="control-btn" id="shootBtn">🎱</div>
+        </div>
     </div>
-</div>
-	
-	<!-- 移动端虚拟控制器 -->
-	<div class="virtual-controls" id="virtualControls">
-		<button class="control-button" id="powerBtn" title="力度">
-			⚡
-			<div class="power-indicator" id="powerIndicator">0</div>
-		</button>
-		<button class="control-button special" id="shootBtn" title="击球">🎱</button>
-		<button class="control-button" id="resetBtn" title="重新开始">🔄</button>
-	</div>
 
-	<!-- 游戏状态显示 -->
-	<div class="game-status" id="gameStatus">
-		<div>🎱 台球游戏</div>
-		<div>得分: <span id="scoreDisplay">0</span></div>
-		<div>球数: <span id="ballsDisplay">7</span></div>
-		<div>状态: <span id="gameState">准备开始</span></div>
-	</div>
-
-	<!-- 方向指示器 -->
-	<div class="orientation-indicator" id="orientationIndicator">
-		<span id="orientationIcon">📱</span>
-		<span id="orientationText">竖屏模式</span>
-	</div>
-
-	<script src = "src/quark.base-1.0.0.alpha.min.js"></script>
-	<script src = "Taiqiu.js"></script>
-	<script src = "mobile-touch-fix.js"></script>
-	
-	<!-- 简化的全屏功能实现 -->
-	<script>
-		window.FullscreenUtils = {
-			initFullscreen: function(containerId, gameTitle) {
-				// 全屏功能初始化
-			}
-		};
-		
-		// 方向管理器
-		window.orientationManager = {
-			init: function() {
-				this.checkOrientation();
-				window.addEventListener('orientationchange', () => {
-					setTimeout(() => this.checkOrientation(), 100);
-				});
-				window.addEventListener('resize', () => {
-					setTimeout(() => this.checkOrientation(), 100);
-				});
-			},
-			
-			checkOrientation: function() {
-				const isPortrait = window.innerHeight > window.innerWidth;
-				const warning = document.getElementById('portraitWarning');
-				
-				// 不再显示竖屏警告，因为现在支持两种方向
-				this.hideWarning();
-				
-				// 根据方向调整游戏界面
-				this.adaptToOrientation(isPortrait);
-			},
-			
-			adaptToOrientation: function(isPortrait) {
-				const virtualControls = document.getElementById('virtualControls');
-				const gameStatus = document.getElementById('gameStatus');
-				const orientationIndicator = document.getElementById('orientationIndicator');
-				const orientationIcon = document.getElementById('orientationIcon');
-				const orientationText = document.getElementById('orientationText');
-				
-				if (virtualControls && this.isMobileDevice()) {
-					virtualControls.style.display = 'flex';
-				}
-				
-				if (gameStatus && this.isMobileDevice()) {
-					gameStatus.style.display = 'block';
-				}
-				
-				// 更新方向指示器
-				if (orientationIndicator && this.isMobileDevice()) {
-					orientationIndicator.style.display = 'flex';
-					if (orientationIcon && orientationText) {
-						if (isPortrait) {
-							orientationIcon.textContent = '📱';
-							orientationText.textContent = '竖屏模式';
-						} else {
-							orientationIcon.textContent = '🖥️';
-							orientationText.textContent = '横屏模式';
-						}
-					}
-				}
-				
-				// 触发游戏画布重新调整
-				if (window.BallGame && BallGame.stage && BallGame.stage.canvas) {
-					setTimeout(() => {
-						this.resizeGameCanvas();
-					}, 200);
-				}
-			},
-			
-			resizeGameCanvas: function() {
-				// 触发主游戏的resize逻辑
-				window.dispatchEvent(new Event('resize'));
-			},
-			
-			showWarning: function() {
-				// 不再显示警告，因为现在支持所有方向
-			},
-			
-			hideWarning: function() {
-				const warning = document.getElementById('portraitWarning');
-				if (warning) {
-					warning.classList.remove('visible');
-				}
-			},
-			
-			isMobileDevice: function() {
-				return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(navigator.userAgent) || 
-					   (window.innerWidth < 768 && 'ontouchstart' in window);
-			}
-		};
-		
-		// 初始化方向管理器
-		document.addEventListener('DOMContentLoaded', function() {
-			orientationManager.init();
-		});
-	</script>
-	
-	<!-- 移动端优化脚本 -->
-	<script>
-		// 简化的移动设备检测
-		function isMobileDevice() {
-			return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(navigator.userAgent) || 
-				   (window.innerWidth < 768 && 'ontouchstart' in window);
-		}
-		
-		// 初始化虚拟控制器
-		function initVirtualControls() {
-			const powerBtn = document.getElementById('powerBtn');
-			const shootBtn = document.getElementById('shootBtn');
-			const resetBtn = document.getElementById('resetBtn');
-			const powerIndicator = document.getElementById('powerIndicator');
-			
-			// 力度按钮 - 调整击球力度
-			let powerLevel = 15; // 默认力度
-			const minPower = 5;
-			const maxPower = 30;
-			
-			function handlePower(e) {
-				e.preventDefault();
-				e.stopPropagation();
-				
-				if (window.BallGame) {
-					// 循环切换力度：低 -> 中 -> 高 -> 低
-					if (powerLevel <= 10) {
-						powerLevel = 20; // 中等力度
-					} else if (powerLevel <= 20) {
-						powerLevel = 30; // 高力度
-					} else {
-						powerLevel = 10; // 低力度
-					}
-					
-					// 更新BallGame的力度
-					BallGame.power = powerLevel;
-					
-					// 显示力度指示器
-					if (powerIndicator) {
-						powerIndicator.textContent = Math.round(powerLevel);
-						powerIndicator.classList.add('visible');
-						
-						// 根据力度改变颜色
-						if (powerLevel <= 10) {
-							powerIndicator.style.background = 'rgba(76, 175, 80, 0.9)'; // 绿色 - 低
-						} else if (powerLevel <= 20) {
-							powerIndicator.style.background = 'rgba(255, 152, 0, 0.9)'; // 橙色 - 中
-						} else {
-							powerIndicator.style.background = 'rgba(244, 67, 54, 0.9)'; // 红色 - 高
-						}
-						
-						// 3秒后隐藏指示器
-						setTimeout(() => {
-							powerIndicator.classList.remove('visible');
-						}, 3000);
-					}
-					
-					// 按钮反馈动画
-					powerBtn.classList.add('active');
-					setTimeout(() => {
-						powerBtn.classList.remove('active');
-					}, 200);
-				}
-			}
-			
-			powerBtn.addEventListener('touchstart', handlePower);
-			powerBtn.addEventListener('click', handlePower);
-			
-			// 击球按钮
-			function handleShoot(e) {
-				e.preventDefault();
-				e.stopPropagation();
-				
-				if (window.BallGame && BallGame.canShot && !BallGame.paused) {
-					if (BallGame.whiteBall && BallGame.line) {
-						const angle = BallGame.line.rotation * Math.PI / 180;
-						const power = BallGame.power || powerLevel;
-						const vx = power * Math.cos(angle);
-						const vy = power * Math.sin(angle);
-						
-						// 设置白球速度
-						BallGame.whiteBall.v.reset(vx, vy);
-						
-						// 初始化进球类型数组
-						if (BallGame.Ball) {
-							BallGame.Ball.type = [];
-							BallGame.loop = BallGame.Ball.update;
-						}
-						
-						// 更新游戏状态
-						BallGame.canShot = false;
-						BallGame.power = 15; // 重置为默认力度
-						powerLevel = 15;
-						BallGame.powerV = 0.4;
-						
-						// 隐藏瞄准元素
-						if (BallGame.cue) BallGame.cue.visible = false;
-						if (BallGame.line) BallGame.line.visible = false;
-						if (BallGame.point) BallGame.point.visible = false;
-						
-						// 按钮反馈
-						shootBtn.classList.add('active');
-						setTimeout(() => {
-							shootBtn.classList.remove('active');
-						}, 200);
-					}
-				}
-			}
-			
-			shootBtn.addEventListener('touchstart', handleShoot);
-			shootBtn.addEventListener('click', handleShoot);
-			
-			// 重新开始按钮
-			function handleReset(e) {
-				e.preventDefault();
-				e.stopPropagation();
-				
-				if (window.BallGame) {
-					// 按钮反馈
-					resetBtn.classList.add('active');
-					setTimeout(() => {
-						location.reload();
-					}, 200);
-				}
-			}
-			
-			resetBtn.addEventListener('touchstart', handleReset);
-			resetBtn.addEventListener('click', handleReset);
-		}
-		
-		// 游戏初始化函数
-		function initGameUI() {
-			try {
-				// 等待BallGame对象完全初始化
-				const checkBallGame = setInterval(() => {
-					if (window.BallGame && BallGame.stage) {
-						clearInterval(checkBallGame);
-						
-						// 初始化虚拟控制器
-						initVirtualControls();
-						
-						// 如果是移动设备，显示虚拟控制器和游戏状态
-						if (isMobileDevice()) {
-							document.getElementById('virtualControls').style.display = 'flex';
-							document.getElementById('gameStatus').style.display = 'block';
-							document.body.style.touchAction = 'manipulation';
-							document.body.style.overflow = 'hidden';
-							document.documentElement.style.overflow = 'hidden';
-							
-							// 启动游戏状态更新
-							startGameStatusUpdates();
-							
-							// 应用移动端画布缩放
-							applyMobileCanvasScaling();
-							
-							// 监听方向变化
-							window.addEventListener('orientationchange', () => {
-								setTimeout(() => {
-									adjustUIForOrientation();
-									applyMobileCanvasScaling();
-								}, 300);
-							});
-							
-							window.addEventListener('resize', () => {
-								setTimeout(() => {
-									applyMobileCanvasScaling();
-								}, 100);
-							});
-							
-							// 初始调整
-							adjustUIForOrientation();
-						}
-					}
-				}, 100);
-				
-				// 超时保护
-				setTimeout(() => {
-					clearInterval(checkBallGame);
-				}, 5000);
-			} catch (error) {
-				// 游戏UI初始化失败
-			}
-		}
-		
-		// 应用移动端画布缩放
-		function applyMobileCanvasScaling() {
-			const checkAndScale = () => {
-				let wrapper = document.getElementById('canvasWrapper');
-				const canvas = document.querySelector('#container canvas');
-				
-				if (!canvas) {
-					return false;
-				}
-				
-				// 如果wrapper不存在，创建它
-				if (!wrapper) {
-					const container = document.getElementById('container');
-					if (!container) return false;
-					
-					wrapper = document.createElement('div');
-					wrapper.id = 'canvasWrapper';
-					wrapper.style.position = 'relative';
-					wrapper.style.transformOrigin = 'center center';
-					wrapper.style.width = '960px';
-					wrapper.style.height = '600px';
-					
-					const parent = canvas.parentNode;
-					parent.insertBefore(wrapper, canvas);
-					wrapper.appendChild(canvas);
-					
-				}
-				
-				const container = document.getElementById('container');
-				if (!container) return false;
-				
-				const isPortrait = window.innerHeight > window.innerWidth;
-				const containerWidth = container.clientWidth;
-				const containerHeight = container.clientHeight;
-				
-				const gameWidth = 960;
-				const gameHeight = 600;
-				
-				let availableWidth, availableHeight;
-				
-				if (isPortrait) {
-					availableWidth = containerWidth * 0.98;
-					availableHeight = containerHeight * 0.50;
-				} else {
-					availableWidth = containerWidth * 0.80;
-					availableHeight = containerHeight * 0.85;
-				}
-				
-				const scaleX = availableWidth / gameWidth;
-				const scaleY = availableHeight / gameHeight;
-				const scale = Math.min(scaleX, scaleY);
-				const finalScale = Math.max(scale, 0.25);
-				
-				wrapper.style.transform = `scale(${finalScale})`;
-				wrapper.style.margin = '0 auto';
-				
-				canvas.style.position = 'relative';
-				canvas.style.display = 'block';
-				canvas.style.left = '0';
-				canvas.style.top = '0';
-				
-				return true;
-			};
-			
-			if (!checkAndScale()) {
-				setTimeout(() => {
-					if (!checkAndScale()) {
-						setTimeout(checkAndScale, 500);
-					}
-				}, 200);
-			}
-		}
-		
-		// 根据方向调整UI
-		function adjustUIForOrientation() {
-			const isPortrait = window.innerHeight > window.innerWidth;
-			const virtualControls = document.getElementById('virtualControls');
-			const gameStatus = document.getElementById('gameStatus');
-			
-			if (virtualControls) {
-				virtualControls.style.display = 'flex';
-			}
-			
-			if (gameStatus) {
-				gameStatus.style.display = 'block';
-			}
-			
-			setTimeout(() => {
-				window.dispatchEvent(new Event('resize'));
-			}, 100);
-		}
-		
-		// 游戏状态更新
-		function startGameStatusUpdates() {
-			setInterval(() => {
-				if (window.BallGame) {
-					const scoreDisplay = document.getElementById('scoreDisplay');
-					const ballsDisplay = document.getElementById('ballsDisplay');
-					const gameState = document.getElementById('gameState');
-					
-					if (scoreDisplay && BallGame.player1) {
-						scoreDisplay.textContent = BallGame.player1.score || 0;
-					}
-					
-					if (ballsDisplay && BallGame.Ball && BallGame.Ball.balls) {
-						ballsDisplay.textContent = BallGame.Ball.balls.length || 0;
-					}
-					
-					if (gameState) {
-						if (BallGame.paused) {
-							gameState.textContent = '已暂停';
-						} else if (BallGame.canShot) {
-							gameState.textContent = '准备击球';
-						} else {
-							gameState.textContent = '球在移动';
-						}
-					}
-				}
-			}, 500);
-		}
-		
-		// 页面加载完成后开始UI初始化
-		document.addEventListener('DOMContentLoaded', function() {
-			initGameUI();
-		});
-	</script>
+    <!-- 游戏逻辑脚本 -->
+    <script src="game.js"></script>
 </body>
 </html>

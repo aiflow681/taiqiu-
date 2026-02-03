@@ -178,6 +178,9 @@ function setupEvents() {
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
     
+    // 键盘事件（PC端力度控制）
+    window.addEventListener('keydown', handleKeyDown);
+    
     // 移动端按钮
     const powerBtn = document.getElementById('powerBtn');
     const shootBtn = document.getElementById('shootBtn');
@@ -188,6 +191,49 @@ function setupEvents() {
     
     if (shootBtn) {
         shootBtn.addEventListener('click', shootFromButton);
+    }
+}
+
+// 键盘事件处理（PC端）
+function handleKeyDown(e) {
+    if (!game.canShoot) return;
+    
+    switch(e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+            // 增加力度
+            game.cue.power = Math.min(game.cue.maxPower, game.cue.power + 2);
+            showPowerIndicator();
+            e.preventDefault();
+            break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+            // 减少力度
+            game.cue.power = Math.max(game.cue.minPower, game.cue.power - 2);
+            showPowerIndicator();
+            e.preventDefault();
+            break;
+        case ' ':
+        case 'Enter':
+            // 空格或回车击球
+            shoot();
+            e.preventDefault();
+            break;
+    }
+}
+
+// 显示力度指示器（PC端）
+function showPowerIndicator() {
+    const indicator = document.getElementById('powerIndicator');
+    if (indicator) {
+        indicator.textContent = Math.round(game.cue.power);
+        indicator.classList.add('visible');
+        indicator.style.background = game.cue.power <= 10 ? 'rgba(76, 175, 80, 0.9)' : 
+                                     game.cue.power <= 20 ? 'rgba(255, 152, 0, 0.9)' : 
+                                     'rgba(244, 67, 54, 0.9)';
+        setTimeout(() => indicator.classList.remove('visible'), 1500);
     }
 }
 
@@ -209,12 +255,24 @@ function handlePointerDown(e) {
     game.mouse.x = coords.x;
     game.mouse.y = coords.y;
     game.mouse.isDown = true;
+    game.mouse.startX = coords.x; // 记录起始位置用于计算力度
+    game.mouse.startY = coords.y;
 }
 
 function handlePointerMove(e) {
     const coords = getCanvasCoords(e.clientX, e.clientY);
     game.mouse.x = coords.x;
     game.mouse.y = coords.y;
+    
+    // PC端：根据拖拽距离动态调整力度
+    if (game.mouse.isDown && game.canShoot) {
+        const dx = coords.x - game.mouse.startX;
+        const dy = coords.y - game.mouse.startY;
+        const dragDistance = Math.sqrt(dx * dx + dy * dy);
+        
+        // 将拖拽距离映射到力度范围 (5-30)
+        game.cue.power = Math.min(game.cue.maxPower, Math.max(game.cue.minPower, dragDistance / 5));
+    }
 }
 
 function handlePointerUp(e) {
@@ -529,6 +587,28 @@ function drawCue(ctx) {
                game.whiteBall.y - Math.sin(game.cue.angle) * 150);
     ctx.stroke();
     ctx.setLineDash([]);
+    
+    // PC端：在画布上显示当前力度
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(10, 10, 120, 40);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 16px Arial';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('力度: ' + Math.round(game.cue.power), 20, 20);
+    
+    // 力度条
+    const barWidth = 100;
+    const barHeight = 8;
+    const powerPercent = (game.cue.power - game.cue.minPower) / (game.cue.maxPower - game.cue.minPower);
+    
+    ctx.fillStyle = '#333';
+    ctx.fillRect(15, 35, barWidth, barHeight);
+    
+    const barColor = game.cue.power <= 10 ? '#4CAF50' : 
+                     game.cue.power <= 20 ? '#FF9800' : '#F44336';
+    ctx.fillStyle = barColor;
+    ctx.fillRect(15, 35, barWidth * powerPercent, barHeight);
 }
 
 // 绘制球
